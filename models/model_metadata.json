@@ -1,0 +1,17 @@
+{
+  "model": "XGBRegressor",
+  "n_estimators": 700,
+  "learning_rate": 0.02,
+  "max_depth": 6,
+  "subsample": 0.8,
+  "colsample_bytree": 0.7,
+  "train_period": "2016-01-08 to 2016-10-08",
+  "test_period": "2016-10-08 to 2016-12-15",
+  "baseline_mape": 52.71,
+  "model_mape": 30.11,
+  "model_mape_03kw": 24.6,
+  "mae": 0.2073,
+  "rmse": 0.3178,
+  "pct_within_30pct": 71.3,
+  "n_features": 31
+}

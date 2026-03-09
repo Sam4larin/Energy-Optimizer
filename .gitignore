@@ -1,0 +1,27 @@
+# Raw data
+data/smart_home.csv
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Personal files
+*.docx
+*.pdf
+
+# Environment
+.env
+*.egg-info/
