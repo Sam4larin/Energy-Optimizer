@@ -18,23 +18,27 @@ from typing import List
 
 TARGET = 'use [kW]'
 
-FEATURE_COLS: List[str] = [
-    # Time features
+# Core features — always available from time + lag + rolling
+CORE_FEATURE_COLS: List[str] = [
     'hour', 'day_of_week', 'month', 'day_of_year',
     'is_weekend', 'is_nighttime',
     'hour_sin', 'hour_cos', 'day_sin', 'day_cos',
-    # Lag features
     'lag_1h', 'lag_2h', 'lag_3h',
     'lag_24h', 'lag_48h', 'lag_168h',
-    # Rolling features
     'rolling_mean_3h', 'rolling_mean_24h',
     'rolling_std_24h', 'rolling_max_24h',
-    # Weather features
+]
+
+# Weather features — used when available
+WEATHER_FEATURE_COLS: List[str] = [
     'temperature', 'humidity', 'windSpeed',
     'cloudCover', 'precipIntensity', 'dewPoint',
     'pressure', 'visibility', 'apparentTemperature',
-    'windBearing', 'precipProbability'
+    'windBearing', 'precipProbability',
 ]
+
+# Full list — kept for backward compatibility with pre-trained demo model
+FEATURE_COLS: List[str] = CORE_FEATURE_COLS + WEATHER_FEATURE_COLS
 
 
 # Feature Engineering
@@ -155,15 +159,10 @@ def build_features(df: pd.DataFrame, drop_na: bool = True) -> pd.DataFrame:
 
 def get_feature_matrix(df: pd.DataFrame) -> tuple:
     """
-    Returns X (features) and y (target) arrays ready for model training.
-
-    Args:
-        df: DataFrame that has already been through build_features().
-
-    Returns:
-        Tuple of (X, y) where X is the feature DataFrame and y is the
-        target Series.
+    Returns X and y. Uses all FEATURE_COLS that are present in df.
+    If weather columns are missing, trains on core features only.
     """
-    X = df[FEATURE_COLS]
+    available = [c for c in FEATURE_COLS if c in df.columns]
+    X = df[available]
     y = df[TARGET]
     return X, y
