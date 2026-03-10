@@ -32,7 +32,15 @@ def load_model() -> Tuple[XGBRegressor, List[str]]:
     Returns:
         Tuple of (model, feature_cols).
     """
-    model        = joblib.load(MODELS_DIR / 'xgb_model.pkl')
+    json_path = MODELS_DIR / 'xgb_model.json'
+    pkl_path  = MODELS_DIR / 'xgb_model.pkl'
+
+    model = XGBRegressor()
+    if json_path.exists():
+        model.load_model(json_path)
+    else:
+        model = joblib.load(pkl_path)
+
     feature_cols = json.loads(
         (MODELS_DIR / 'feature_columns.json').read_text()
     )
