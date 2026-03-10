@@ -134,7 +134,8 @@ class TestOptimizer:
             trough_hour,
             peak_hour,
             sample_forecast,
-            rate_per_kwh=20.0,
+            peak_rate=20.0,
+            off_peak_rate=10.0,
         )
         assert saving["saving"] >= 0
 

@@ -92,11 +92,11 @@ def retrain_on_user_data(
     log("Training XGBoost model on your data...")
 
     model = XGBRegressor(
-        n_estimators=700,
-        learning_rate=0.02,
+        n_estimators=300,
+        learning_rate=0.05,
         max_depth=6,
         subsample=0.8,
-        colsample_bytree=0.7,
+        colsample_bytree=0.8,
         random_state=42,
         n_jobs=-1,
     )

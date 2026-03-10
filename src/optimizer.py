@@ -88,7 +88,8 @@ def _coerce_appliances(appliances: List) -> List[Dict]:
             name = appliance.get('name') or appliance.get('appliance')
             wattage = appliance.get('wattage')
             run_hours = appliance.get('run_hours')
-            if name and wattage and run_hours:
+            # Allow zero values, only exclude missing / None values
+            if name and wattage is not None and run_hours is not None:
                 coerced.append({
                     'name': name,
                     'wattage': float(wattage),
@@ -111,11 +112,13 @@ def find_optimal_window(
     best_hour: Optional[int] = None
     best_avg = float('inf')
 
-    for start in range(n - window + 1):
-        window_hours = list(range(start, start + window))
+    # Allow windows that wrap past midnight by treating the forecast as circular.
+    for start in range(n):
+        window_hours = [(start + i) % n for i in range(window)]
         if any(h in exclude_hours for h in window_hours):
             continue
-        avg = float(np.mean(yhat[start:start + window]))
+        vals = [yhat[h] for h in window_hours]
+        avg = float(np.mean(vals))
         if avg < best_avg:
             best_avg = avg
             best_hour = start
@@ -124,8 +127,10 @@ def find_optimal_window(
         return best_hour
 
     # Fall back to the best available window if the exclusion list blocks all slots.
-    for start in range(n - window + 1):
-        avg = float(np.mean(yhat[start:start + window]))
+    for start in range(n):
+        window_hours = [(start + i) % n for i in range(window)]
+        vals = [yhat[h] for h in window_hours]
+        avg = float(np.mean(vals))
         if avg < best_avg:
             best_avg = avg
             best_hour = start
@@ -157,7 +162,8 @@ def estimate_savings(
     optimal_hour: int,
     peak_hour: int,
     forecast: pd.DataFrame,
-    rate_per_kwh: float,
+    peak_rate: float,
+    off_peak_rate: float,
 ) -> Dict:
     energy_kwh = (wattage / 1000) * run_hours
     yhat = forecast['yhat'].values
@@ -168,7 +174,8 @@ def estimate_savings(
 
     def effective_rate(hour: int) -> float:
         load_ratio = (yhat[hour] - trough_load) / load_range
-        return rate_per_kwh * (1.0 + 0.5 * load_ratio)
+        # Linearly interpolate between off-peak and peak rate based on load.
+        return off_peak_rate + (peak_rate - off_peak_rate) * load_ratio
 
     cost_at_optimal = energy_kwh * effective_rate(optimal_hour)
     cost_at_peak = energy_kwh * effective_rate(peak_hour)
@@ -225,7 +232,8 @@ def generate_recommendations(
         assigned_hours.extend(range(optimal_hour, optimal_hour + window_size))
 
         savings = estimate_savings(
-            wattage, run_hours, optimal_hour, peak_hour, forecast, base_rate
+            wattage, run_hours, optimal_hour, peak_hour, forecast,
+            peak_rate=peak_rate, off_peak_rate=off_peak_rate,
         )
 
         if show_cost_savings and savings['saving'] > 0:
@@ -409,6 +417,10 @@ def calculate_budget_plan(
                          the user's actual appliances rather than generic defaults.
                          Each dict must have 'name', 'wattage', 'run_hours'.
     """
+    # Guard against zero / invalid inputs (e.g., user enters 0 rate)
+    rate_per_kwh = max(rate_per_kwh, 1e-4)
+    target_days = max(int(target_days), 1)
+
     avg_hourly_kwh = float(historical_df['use [kW]'].mean())
     avg_daily_kwh = avg_hourly_kwh * 24
     avg_daily_cost = avg_daily_kwh * rate_per_kwh
