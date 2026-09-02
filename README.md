@@ -2,15 +2,15 @@
 
 **Forecast your household electricity. Cut your bills.**
 
-A machine learning dashboard that predicts 24-hour household energy consumption and recommends the cheapest times to run flexible appliances — washing machine, dishwasher, EV charger, and more.
+A machine learning dashboard that predicts 24-hour household energy consumption and recommends the cheapest times to run flexible appliances, e.g washing machine, dishwasher, EV charger, and more.
 
-**[→ Live Demo](https://energy-optimizer-97hkkpjh7nzqmswnud9ulh.streamlit.app/)** — no sign-up, works immediately in your browser.
+**[→ Live Demo](https://energy-optimizer-97hkkpjh7nzqmswnud9ulh.streamlit.app/)**; no sign-up, works immediately in your browser.
 
 ---
 
 ## What It Does
 
-Upload a CSV from your smart meter and the app retrains an XGBoost model on your actual usage data, then:
+Upload a CSV from your smart meter, and the app retrains an XGBoost model on your actual usage data, then:
 
 - Forecasts your consumption hour-by-hour for the next 24 hours
 - Highlights your cheapest and most expensive demand windows
@@ -54,11 +54,11 @@ The model was trained on 349 days of hourly smart meter data and evaluated on a 
 
 ## How It Works
 
-1. **Upload** — `src/ingestor.py` parses your CSV, auto-detects columns, and normalises everything to a clean hourly series
-2. **Feature engineering** — `src/features.py` builds time, lag, and rolling features. The same module is used by both the training notebooks and the live dashboard — no duplicated logic
-3. **Train or load** — `src/model.py` either loads the pre-trained model from `models/` or retrains XGBoost on your data with a temporal 80/20 split
-4. **Weather** — `src/weather.py` optionally fetches historical and forecast weather from Open-Meteo and merges it into both training and inference
-5. **Recommend** — `src/optimizer.py` turns the 24-hour forecast into appliance scheduling suggestions and budget guidance
+1. **Upload**: `src/ingestor.py` parses your CSV, auto-detects columns, and normalises everything to a clean hourly series
+2. **Feature engineering**: `src/features.py` builds time, lag, and rolling features. The same module is used by both the training notebooks and the live dashboard — no duplicated logic
+3. **Train or load**: `src/model.py` either loads the pre-trained model from `models/` or retrains XGBoost on your data with a temporal 80/20 split
+4. **Weather**: `src/weather.py` optionally fetches historical and forecast weather from Open-Meteo and merges it into both training and inference
+5. **Recommend**: `src/optimizer.py` turns the 24-hour forecast into appliance scheduling suggestions and budget guidance
 
 ---
 
@@ -69,23 +69,23 @@ The model was trained on 349 days of hourly smart meter data and evaluated on a 
 - **Calendar:** hour, day of week, month, day of year, is_weekend, is_nighttime
 - **Cyclical encoding:** sin/cos transforms for hour (period 24) and day-of-week (period 7), so the model understands hour 23 and hour 0 are adjacent
 - **Lag features:** consumption at 1h, 2h, 3h, 24h, 48h, 168h ago — `lag_1h` is the single most important feature (importance score 0.32)
-- **Rolling statistics:** 3h and 24h rolling mean, 24h rolling std and max — all computed on a shifted series to prevent lookahead
+- **Rolling statistics:** 3h and 24h rolling mean, 24h rolling std and max, all computed on a shifted series to prevent lookahead
 
-**11 optional weather features** — merged in when a location is provided: temperature, apparent temperature, humidity, wind speed, wind bearing, cloud cover, precipitation intensity, precipitation probability, pressure, dew point, visibility.
+**11 optional weather features** merged in when a location is provided: temperature, apparent temperature, humidity, wind speed, wind bearing, cloud cover, precipitation intensity, precipitation probability, pressure, dew point, visibility.
 
 ---
 
 ## Key Design Decisions
 
-**Temporal train/test split** — strictly chronological 80/20, no shuffling. Prevents data leakage and simulates real forecasting conditions where future values are unavailable.
+**Temporal train/test split**: strictly chronological 80/20, no shuffling. Prevents data leakage and simulates real forecasting conditions where future values are unavailable.
 
-**No lookahead in rolling features** — rolling windows are computed on `df[TARGET].shift(1)`, so the value at position `i` only uses rows `i-1` and earlier.
+**No lookahead in rolling features**: rolling windows are computed on `df[TARGET].shift(1)`, so the value at position `i` only uses rows `i-1` and earlier.
 
-**Iterative forecasting** — for multi-hour forecasts, each predicted value is fed back as the lag input for the next hour rather than using ground truth. This is how the model behaves in production.
+**Iterative forecasting**: for multi-hour forecasts, each predicted value is fed back as the lag input for the next hour rather than using ground truth. This is how the model behaves in production.
 
-**MAPE threshold** — accuracy is reported on hours above 0.3 kW. Raw MAPE on near-zero hours is misleading and not representative of real-world performance.
+**MAPE threshold**: accuracy is reported on hours above 0.3 kW. Raw MAPE on near-zero hours is misleading and not representative of real-world performance.
 
-**Personalised budget planner** — the appliance impact table and cut suggestions use the user's actual selected appliances and their real wattage, not generic hardcoded defaults.
+**Personalised budget planner**: the appliance impact table and cut suggestions use the user's actual selected appliances and their real wattage, not generic hardcoded defaults.
 
 ---
 
@@ -93,7 +93,7 @@ The model was trained on 349 days of hourly smart meter data and evaluated on a 
 
 ```
 energy-optimizer/
-├── app.py                        # Streamlit dashboard — UI, session state, orchestration
+├── app.py                        # Streamlit dashboard: UI, session state, orchestration
 ├── src/
 │   ├── features.py               # Feature engineering pipeline
 │   ├── ingestor.py               # CSV parsing, normalisation, validation
